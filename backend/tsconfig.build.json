@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.int-spec.ts",
+    "test",
+    "jest.config.ts",
+    "jest.integration.config.ts"
+  ]
+}
