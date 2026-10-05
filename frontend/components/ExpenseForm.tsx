@@ -66,7 +66,7 @@ export function ExpenseForm({ members, initialValues, submitLabel = 'Save', onSu
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="amount">Amount ($)</Label>
+        <Label htmlFor="amount">Amount (₹)</Label>
         <Input
           id="amount"
           type="number"

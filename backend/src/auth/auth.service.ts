@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { InvitesService } from '../invites/invites.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -27,23 +26,23 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly invites: InvitesService,
   ) {}
 
   async register(dto: RegisterDto): Promise<{ user: SafeUser; tokens: AuthTokens }> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) {
+    if (existing?.passwordHash) {
       throw new ConflictException('Email already registered');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-    const user = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: { email: dto.email, passwordHash, name: dto.name },
-      });
-      await this.invites.consumeInvitesForNewUser(tx, created.id, created.email);
-      return created;
-    });
+    const user = existing
+      ? await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { passwordHash, name: dto.name },
+        })
+      : await this.prisma.user.create({
+          data: { email: dto.email, passwordHash, name: dto.name },
+        });
 
     const tokens = await this.issueTokens(user.id);
     return { user: toSafeUser(user), tokens };
@@ -51,7 +50,7 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<{ user: SafeUser; tokens: AuthTokens }> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user) {
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 

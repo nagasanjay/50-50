@@ -2,9 +2,9 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getServerAccessToken } from '@/lib/server-auth';
-import type { Group, GroupInvite, GroupMember } from '@/lib/types';
+import type { Group, GroupMember } from '@/lib/types';
 import { BackLink } from '@/components/BackLink';
-import { InviteManager } from '@/components/InviteManager';
+import { AddMemberManager } from '@/components/AddMemberManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function GroupMembersPage({ params }: { params: { groupId: string } }) {
@@ -13,10 +13,9 @@ export default async function GroupMembersPage({ params }: { params: { groupId: 
     redirect('/login');
   }
 
-  const [group, members, invites] = await Promise.all([
+  const [group, members] = await Promise.all([
     apiFetch<Group>(`/groups/${params.groupId}`, { accessToken }),
     apiFetch<GroupMember[]>(`/groups/${params.groupId}/members`, { accessToken }),
-    apiFetch<GroupInvite[]>(`/groups/${params.groupId}/invites`, { accessToken }),
   ]);
 
   const headersList = headers();
@@ -45,13 +44,14 @@ export default async function GroupMembersPage({ params }: { params: { groupId: 
         <CardContent className="space-y-1">
           {members.map((m) => (
             <p key={m.id} className="text-sm">
-              {m.user.name} {m.role === 'OWNER' && <span className="text-muted-foreground">(owner)</span>}
+              {m.user.name} {m.role === 'OWNER' && <span className="text-muted-foreground">(owner)</span>}{' '}
+              {m.user.pending && <span className="text-muted-foreground">(not yet registered)</span>}
             </p>
           ))}
         </CardContent>
       </Card>
 
-      <InviteManager groupId={params.groupId} initialInvites={invites} />
+      <AddMemberManager groupId={params.groupId} initialMembers={members} />
     </div>
   );
 }

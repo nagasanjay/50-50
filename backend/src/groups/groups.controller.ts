@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { JoinGroupDto } from './dto/join-group.dto';
+import { AddMemberDto } from './dto/add-member.dto';
 import { GroupMemberGuard } from './group-member.guard';
 
 @Controller()
@@ -34,5 +35,21 @@ export class GroupsController {
   @Get('groups/:groupId/members')
   listMembers(@Param('groupId') groupId: string) {
     return this.groupsService.listMembers(groupId);
+  }
+
+  @UseGuards(GroupMemberGuard)
+  @Post('groups/:groupId/members')
+  addMember(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('groupId') groupId: string,
+    @Body() dto: AddMemberDto,
+  ) {
+    return this.groupsService.addMember(groupId, user.id, dto.email, dto.name);
+  }
+
+  @UseGuards(GroupMemberGuard)
+  @Delete('groups/:groupId/members/:userId')
+  removeMember(@Param('groupId') groupId: string, @Param('userId') userId: string) {
+    return this.groupsService.removeMember(groupId, userId);
   }
 }

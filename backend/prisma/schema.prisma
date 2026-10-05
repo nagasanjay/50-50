@@ -30,7 +30,7 @@ enum ActivityType {
 model User {
   id           String   @id @default(uuid(7))
   email        String   @unique
-  passwordHash String
+  passwordHash String?
   name         String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -67,7 +67,6 @@ model Group {
   expenses     Expense[]
   settlements  Settlement[]
   activityLogs ActivityLog[]
-  invites      GroupInvite[]
 }
 
 model GroupMember {
@@ -81,18 +80,6 @@ model GroupMember {
 
   @@unique([groupId, userId])
   @@index([userId])
-}
-
-model GroupInvite {
-  id        String   @id @default(uuid(7))
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  email     String
-  name      String
-  createdAt DateTime @default(now())
-
-  @@unique([groupId, email])
-  @@index([email])
 }
 
 model Expense {

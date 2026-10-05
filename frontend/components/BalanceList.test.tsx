@@ -20,9 +20,9 @@ describe('BalanceList', () => {
     render(<BalanceList data={data} currentUserId="me" />);
 
     expect(screen.getByText('You')).toBeInTheDocument();
-    expect(screen.getByText('is owed $50.00')).toBeInTheDocument();
+    expect(screen.getByText('is owed ₹50.00')).toBeInTheDocument();
     expect(screen.getByText('Friend')).toBeInTheDocument();
-    expect(screen.getByText('owes $25.00')).toBeInTheDocument();
+    expect(screen.getByText('owes ₹25.00')).toBeInTheDocument();
   });
 
   it('shows "settled up" for a zero balance', () => {
@@ -40,7 +40,7 @@ describe('BalanceList', () => {
       simplifiedTransfers: [{ fromUserId: 'me', toUserId: 'friend', amountCents: 1000 }],
     };
     render(<BalanceList data={data} currentUserId="me" />);
-    expect(screen.getByText('You pay friend $10.00')).toBeInTheDocument();
+    expect(screen.getByText('You pay friend ₹10.00')).toBeInTheDocument();
   });
 
   it('renders both party names when neither side is the current user', () => {
@@ -49,7 +49,7 @@ describe('BalanceList', () => {
       simplifiedTransfers: [{ fromUserId: 'alice', toUserId: 'bob', amountCents: 500 }],
     };
     render(<BalanceList data={data} currentUserId="me" />);
-    expect(screen.getByText('alice pay bob $5.00')).toBeInTheDocument();
+    expect(screen.getByText('alice pay bob ₹5.00')).toBeInTheDocument();
   });
 
   it('falls back to "Unknown" for a balance entry with no name', () => {

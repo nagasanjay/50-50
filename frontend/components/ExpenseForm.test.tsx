@@ -15,7 +15,7 @@ describe('ExpenseForm', () => {
     render(<ExpenseForm members={members} onSubmit={onSubmit} />);
 
     await user.type(screen.getByLabelText('Description'), 'Hotel');
-    await user.type(screen.getByLabelText('Amount ($)'), '45.50');
+    await user.type(screen.getByLabelText('Amount (₹)'), '45.50');
     await user.click(screen.getByLabelText('Alice'));
     await user.click(screen.getByLabelText('Bob'));
     await user.click(screen.getByRole('button', { name: /save/i }));
@@ -39,7 +39,7 @@ describe('ExpenseForm', () => {
     await user.selectOptions(screen.getByLabelText('Split type'), 'EXACT');
 
     await user.type(screen.getByLabelText('Description'), 'Snacks');
-    await user.type(screen.getByLabelText('Amount ($)'), '10');
+    await user.type(screen.getByLabelText('Amount (₹)'), '10');
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     const call = onSubmit.mock.calls[0][0];
@@ -55,7 +55,7 @@ describe('ExpenseForm', () => {
 
     await user.selectOptions(screen.getByLabelText('Paid by'), 'u2');
     await user.type(screen.getByLabelText('Description'), 'Snacks');
-    await user.type(screen.getByLabelText('Amount ($)'), '5');
+    await user.type(screen.getByLabelText('Amount (₹)'), '5');
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     expect(onSubmit.mock.calls[0][0].paidById).toBe('u2');

@@ -6,6 +6,13 @@ export interface User {
   name: string;
 }
 
+export interface GroupMemberUser {
+  id: string;
+  email: string;
+  name: string;
+  pending: boolean;
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -18,15 +25,7 @@ export interface GroupMember {
   groupId: string;
   userId: string;
   role: 'OWNER' | 'MEMBER';
-  user: User;
-}
-
-export interface GroupInvite {
-  id: string;
-  groupId: string;
-  email: string;
-  name: string;
-  createdAt: string;
+  user: GroupMemberUser;
 }
 
 export interface ExpenseParticipant {

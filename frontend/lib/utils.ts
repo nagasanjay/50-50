@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCents(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, {
+  return (cents / 100).toLocaleString('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
   });
 }

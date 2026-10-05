@@ -2,34 +2,36 @@
 
 import { useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
-import type { GroupInvite } from '@/lib/types';
+import type { GroupMember } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export interface InviteManagerProps {
+export interface AddMemberManagerProps {
   groupId: string;
-  initialInvites: GroupInvite[];
+  initialMembers: GroupMember[];
 }
 
-export function InviteManager({ groupId, initialInvites }: InviteManagerProps) {
-  const [invites, setInvites] = useState(initialInvites);
+export function AddMemberManager({ groupId, initialMembers }: AddMemberManagerProps) {
+  const [members, setMembers] = useState(initialMembers);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const pendingMembers = members.filter((m) => m.user.pending);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      const invite = await apiFetch<GroupInvite>(`/groups/${groupId}/invites`, {
+      const member = await apiFetch<GroupMember>(`/groups/${groupId}/members`, {
         method: 'POST',
         body: JSON.stringify({ name, email }),
       });
-      setInvites([invite, ...invites]);
+      setMembers([...members, member]);
       setName('');
       setEmail('');
     } catch (err) {
@@ -39,26 +41,35 @@ export function InviteManager({ groupId, initialInvites }: InviteManagerProps) {
     }
   }
 
-  async function handleCancel(inviteId: string) {
-    await apiFetch(`/groups/${groupId}/invites/${inviteId}`, { method: 'DELETE' });
-    setInvites(invites.filter((i) => i.id !== inviteId));
+  async function handleRemove(userId: string) {
+    setError(null);
+    try {
+      await apiFetch(`/groups/${groupId}/members/${userId}`, { method: 'DELETE' });
+      setMembers(members.filter((m) => m.userId !== userId));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not remove this person');
+    }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Invite by email</CardTitle>
+        <CardTitle className="text-base">Add a person</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          They can be split into expenses right away. Once they register with this email, they
+          get full access to the group.
+        </p>
         <form onSubmit={handleSubmit} className="space-y-2">
           <div className="space-y-1">
-            <Label htmlFor="invite-name">Name</Label>
-            <Input id="invite-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Label htmlFor="member-name">Name</Label>
+            <Input id="member-name" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="invite-email">Email</Label>
+            <Label htmlFor="member-email">Email</Label>
             <Input
-              id="invite-email"
+              id="member-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -67,20 +78,20 @@ export function InviteManager({ groupId, initialInvites }: InviteManagerProps) {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={submitting} className="w-full">
-            {submitting ? 'Inviting…' : 'Send invite'}
+            {submitting ? 'Adding…' : 'Add person'}
           </Button>
         </form>
 
-        {invites.length > 0 && (
+        {pendingMembers.length > 0 && (
           <div className="space-y-1 border-t pt-4">
-            <p className="text-sm font-medium">Pending invites</p>
-            {invites.map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between text-sm">
+            <p className="text-sm font-medium">Not yet registered</p>
+            {pendingMembers.map((member) => (
+              <div key={member.id} className="flex items-center justify-between text-sm">
                 <span>
-                  {invite.name} ({invite.email})
+                  {member.user.name} ({member.user.email})
                 </span>
-                <Button variant="ghost" size="sm" onClick={() => handleCancel(invite.id)}>
-                  Cancel
+                <Button variant="ghost" size="sm" onClick={() => handleRemove(member.userId)}>
+                  Remove
                 </Button>
               </div>
             ))}

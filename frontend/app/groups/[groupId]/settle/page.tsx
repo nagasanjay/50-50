@@ -94,7 +94,7 @@ export default function SettleUpPage({ params }: { params: { groupId: string } }
               </select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="amount">Amount ($)</Label>
+              <Label htmlFor="amount">Amount (₹)</Label>
               <Input
                 id="amount"
                 type="number"

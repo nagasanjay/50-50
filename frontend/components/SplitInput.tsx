@@ -53,7 +53,7 @@ export function SplitInput({ members, splitType, value, onChange }: SplitInputPr
   return (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium">
-        {isPercentage ? 'Percentage per person' : 'Exact amount per person ($)'}
+        {isPercentage ? 'Percentage per person' : 'Exact amount per person (₹)'}
       </legend>
       {members.map((m) => {
         const existing = shareFor(m.userId);

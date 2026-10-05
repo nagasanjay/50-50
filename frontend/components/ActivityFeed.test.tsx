@@ -43,8 +43,8 @@ describe('ActivityFeed', () => {
 
     expect(screen.getByText('Alice created the group')).toBeInTheDocument();
     expect(screen.getByText('Bob joined the group')).toBeInTheDocument();
-    expect(screen.getByText('Alice added "Hotel" ($50.00)')).toBeInTheDocument();
-    expect(screen.getByText('Alice recorded a settlement of $25.00')).toBeInTheDocument();
+    expect(screen.getByText('Alice added "Hotel" (₹50.00)')).toBeInTheDocument();
+    expect(screen.getByText('Alice recorded a settlement of ₹25.00')).toBeInTheDocument();
     expect(screen.getByText('Alice updated "Hotel"')).toBeInTheDocument();
     expect(screen.getByText('Alice deleted "Snacks"')).toBeInTheDocument();
   });

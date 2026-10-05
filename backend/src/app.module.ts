@@ -9,7 +9,6 @@ import { SettlementsModule } from './settlements/settlements.module';
 import { BalancesModule } from './balances/balances.module';
 import { ActivityModule } from './activity/activity.module';
 import { ImportModule } from './import/import.module';
-import { InvitesModule } from './invites/invites.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
@@ -23,7 +22,6 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     BalancesModule,
     ActivityModule,
     ImportModule,
-    InvitesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
