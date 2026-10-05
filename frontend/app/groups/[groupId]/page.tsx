@@ -5,6 +5,7 @@ import { getServerAccessToken } from '@/lib/server-auth';
 import type { ActivityLogEntry, BalancesResponse, Group, User } from '@/lib/types';
 import { BalanceList } from '@/components/BalanceList';
 import { ActivityFeed } from '@/components/ActivityFeed';
+import { BackLink } from '@/components/BackLink';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
 
   return (
     <div className="space-y-4">
+      <BackLink href="/groups" label="Back to groups" />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{group.name}</h1>
         <div className="flex gap-2">

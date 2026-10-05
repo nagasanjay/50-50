@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 import type { Expense, GroupMember } from '@/lib/types';
 import { ExpenseForm, type ExpenseFormValues } from '@/components/ExpenseForm';
 import type { SplitMember, SplitParticipantsValue } from '@/components/SplitInput';
+import { BackLink } from '@/components/BackLink';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -69,34 +70,37 @@ export default function ExpenseDetailPage({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Edit expense</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {members && expense ? (
-          <>
-            <ExpenseForm
-              members={members}
-              submitLabel="Save changes"
-              initialValues={{
-                description: expense.description,
-                amountCents: expense.amountCents,
-                splitType: expense.splitType,
-                paidById: expense.paidById,
-                participants: toParticipantsValue(expense),
-              }}
-              onSubmit={handleSubmit}
-            />
-            <Button variant="destructive" className="w-full" onClick={handleDelete}>
-              Delete expense
-            </Button>
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <BackLink href={`/groups/${params.groupId}`} label="Back to group" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit expense</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {members && expense ? (
+            <>
+              <ExpenseForm
+                members={members}
+                submitLabel="Save changes"
+                initialValues={{
+                  description: expense.description,
+                  amountCents: expense.amountCents,
+                  splitType: expense.splitType,
+                  paidById: expense.paidById,
+                  participants: toParticipantsValue(expense),
+                }}
+                onSubmit={handleSubmit}
+              />
+              <Button variant="destructive" className="w-full" onClick={handleDelete}>
+                Delete expense
+              </Button>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

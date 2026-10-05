@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import type { GroupMember, Settlement } from '@/lib/types';
+import { BackLink } from '@/components/BackLink';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,9 @@ export default function SettleUpPage({ params }: { params: { groupId: string } }
   }
 
   return (
-    <Card>
+    <div className="space-y-4">
+      <BackLink href={`/groups/${params.groupId}`} label="Back to group" />
+      <Card>
       <CardHeader>
         <CardTitle>Settle up</CardTitle>
       </CardHeader>
@@ -113,6 +116,7 @@ export default function SettleUpPage({ params }: { params: { groupId: string } }
           </form>
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

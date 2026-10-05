@@ -1,7 +1,10 @@
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getServerAccessToken } from '@/lib/server-auth';
-import type { Group, GroupMember } from '@/lib/types';
+import type { Group, GroupInvite, GroupMember } from '@/lib/types';
+import { BackLink } from '@/components/BackLink';
+import { InviteManager } from '@/components/InviteManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function GroupMembersPage({ params }: { params: { groupId: string } }) {
@@ -10,15 +13,20 @@ export default async function GroupMembersPage({ params }: { params: { groupId: 
     redirect('/login');
   }
 
-  const [group, members] = await Promise.all([
+  const [group, members, invites] = await Promise.all([
     apiFetch<Group>(`/groups/${params.groupId}`, { accessToken }),
     apiFetch<GroupMember[]>(`/groups/${params.groupId}/members`, { accessToken }),
+    apiFetch<GroupInvite[]>(`/groups/${params.groupId}/invites`, { accessToken }),
   ]);
 
-  const inviteLink = `/join/${group.inviteCode}`;
+  const headersList = headers();
+  const host = headersList.get('host') ?? '';
+  const proto = headersList.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
+  const inviteLink = `${proto}://${host}/join/${group.inviteCode}`;
 
   return (
     <div className="space-y-4">
+      <BackLink href={`/groups/${params.groupId}`} label="Back to group" />
       <h1 className="text-xl font-semibold">Members of {group.name}</h1>
 
       <Card>
@@ -42,6 +50,8 @@ export default async function GroupMembersPage({ params }: { params: { groupId: 
           ))}
         </CardContent>
       </Card>
+
+      <InviteManager groupId={params.groupId} initialInvites={invites} />
     </div>
   );
 }

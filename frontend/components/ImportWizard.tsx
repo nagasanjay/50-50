@@ -14,16 +14,24 @@ export interface ImportWizardProps {
 }
 
 type Step =
-  | { name: 'paste' }
+  | { name: 'upload' }
   | { name: 'map'; csv: string; preview: PreviewImportResult }
   | { name: 'result'; result: CommitImportResult };
 
 export function ImportWizard({ groupId, members }: ImportWizardProps) {
   const [csv, setCsv] = useState('');
-  const [step, setStep] = useState<Step>({ name: 'paste' });
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>({ name: 'upload' });
   const [memberMap, setMemberMap] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    setCsv(await readFileAsText(file));
+  }
 
   async function handlePreview(e: React.FormEvent) {
     e.preventDefault();
@@ -138,21 +146,31 @@ export function ImportWizard({ groupId, members }: ImportWizardProps) {
       <CardContent>
         <form onSubmit={handlePreview} className="space-y-4">
           <div className="space-y-1">
-            <Label htmlFor="csv">Paste the CSV export from your Splitwise group</Label>
-            <textarea
+            <Label htmlFor="csv">Upload the CSV export from your Splitwise group</Label>
+            <input
               id="csv"
-              className="h-48 w-full rounded-md border border-input bg-background p-3 text-sm font-mono"
-              value={csv}
-              onChange={(e) => setCsv(e.target.value)}
-              required
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
             />
+            {fileName && <p className="text-xs text-muted-foreground">Selected: {fileName}</p>}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={submitting} className="w-full">
+          <Button type="submit" disabled={submitting || !csv} className="w-full">
             {submitting ? 'Reading…' : 'Preview'}
           </Button>
         </form>
       </CardContent>
     </Card>
   );
+}
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
 }

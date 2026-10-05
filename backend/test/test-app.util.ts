@@ -21,6 +21,7 @@ export async function truncateAll(prisma: PrismaService): Promise<void> {
     prisma.expenseParticipant.deleteMany(),
     prisma.expense.deleteMany(),
     prisma.groupMember.deleteMany(),
+    prisma.groupInvite.deleteMany(),
     prisma.group.deleteMany(),
     prisma.refreshToken.deleteMany(),
     prisma.user.deleteMany(),

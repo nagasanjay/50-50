@@ -17,6 +17,11 @@ function jsonResponse(status: number, body: unknown) {
   } as Response;
 }
 
+async function uploadCsv(user: ReturnType<typeof userEvent.setup>, content: string) {
+  const file = new File([content], 'export.csv', { type: 'text/csv' });
+  await user.upload(screen.getByLabelText(/upload the csv/i), file);
+}
+
 describe('ImportWizard', () => {
   beforeEach(() => {
     clearAccessToken();
@@ -40,7 +45,7 @@ describe('ImportWizard', () => {
 
     render(<ImportWizard groupId="g1" members={members} />);
 
-    await user.type(screen.getByLabelText(/paste the csv/i), 'Date,Description,...');
+    await uploadCsv(user, 'Date,Description,...');
     await user.click(screen.getByRole('button', { name: /preview/i }));
 
     expect(await screen.findByText(/2 expense\(s\) and 1 settlement\(s\) found/)).toBeInTheDocument();
@@ -70,7 +75,7 @@ describe('ImportWizard', () => {
 
     render(<ImportWizard groupId="g1" members={members} />);
 
-    await user.type(screen.getByLabelText(/paste the csv/i), 'Date,Description,...');
+    await uploadCsv(user, 'Date,Description,...');
     await user.click(screen.getByRole('button', { name: /preview/i }));
 
     await screen.findByText('Charlie');
@@ -95,7 +100,7 @@ describe('ImportWizard', () => {
       );
 
     render(<ImportWizard groupId="g1" members={members} />);
-    await user.type(screen.getByLabelText(/paste the csv/i), 'Date,Description,...');
+    await uploadCsv(user, 'Date,Description,...');
     await user.click(screen.getByRole('button', { name: /preview/i }));
     await user.click(await screen.findByRole('button', { name: /^import$/i }));
 
@@ -112,7 +117,7 @@ describe('ImportWizard', () => {
       .mockResolvedValueOnce(jsonResponse(400, { message: 'Every mapped user must already be a member' }));
 
     render(<ImportWizard groupId="g1" members={members} />);
-    await user.type(screen.getByLabelText(/paste the csv/i), 'Date,Description,...');
+    await uploadCsv(user, 'Date,Description,...');
     await user.click(screen.getByRole('button', { name: /preview/i }));
     await user.click(await screen.findByRole('button', { name: /^import$/i }));
 
@@ -126,7 +131,7 @@ describe('ImportWizard', () => {
     );
 
     render(<ImportWizard groupId="g1" members={members} />);
-    await user.type(screen.getByLabelText(/paste the csv/i), 'garbage');
+    await uploadCsv(user, 'garbage');
     await user.click(screen.getByRole('button', { name: /preview/i }));
 
     expect(await screen.findByText('Invalid CSV format')).toBeInTheDocument();

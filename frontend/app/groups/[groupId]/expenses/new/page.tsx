@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 import type { Expense, GroupMember } from '@/lib/types';
 import { ExpenseForm, type ExpenseFormValues } from '@/components/ExpenseForm';
 import type { SplitMember } from '@/components/SplitInput';
+import { BackLink } from '@/components/BackLink';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function NewExpensePage({ params }: { params: { groupId: string } }) {
@@ -34,18 +35,21 @@ export default function NewExpensePage({ params }: { params: { groupId: string }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Add expense</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {members ? (
-          <ExpenseForm members={members} submitLabel="Add expense" onSubmit={handleSubmit} />
-        ) : (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <BackLink href={`/groups/${params.groupId}`} label="Back to group" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Add expense</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {members ? (
+            <ExpenseForm members={members} submitLabel="Add expense" onSubmit={handleSubmit} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

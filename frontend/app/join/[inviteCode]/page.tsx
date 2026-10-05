@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
+import { BackLink } from '@/components/BackLink';
 
 export default function JoinGroupPage({ params }: { params: { inviteCode: string } }) {
   const router = useRouter();
@@ -33,7 +34,12 @@ export default function JoinGroupPage({ params }: { params: { inviteCode: string
   }, [params.inviteCode, router]);
 
   if (error) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-destructive">{error}</p>
+        <BackLink href="/groups" label="Back to groups" />
+      </div>
+    );
   }
 
   return <p className="text-sm text-muted-foreground">Joining group…</p>;

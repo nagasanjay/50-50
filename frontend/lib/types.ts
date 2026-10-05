@@ -21,6 +21,14 @@ export interface GroupMember {
   user: User;
 }
 
+export interface GroupInvite {
+  id: string;
+  groupId: string;
+  email: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface ExpenseParticipant {
   id: string;
   userId: string;
