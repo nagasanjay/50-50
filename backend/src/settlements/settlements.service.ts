@@ -57,8 +57,26 @@ export class SettlementsService {
 
   async findAllForGroup(groupId: string) {
     return this.prisma.settlement.findMany({
-      where: { groupId },
+      where: { groupId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async remove(groupId: string, settlementId: string) {
+    const settlement = await this.prisma.settlement.findFirst({
+      where: { id: settlementId, groupId },
+    });
+    if (!settlement) {
+      throw new NotFoundException('Settlement not found');
+    }
+    if (settlement.deletedAt) {
+      return { success: true };
+    }
+
+    await this.prisma.settlement.update({
+      where: { id: settlementId },
+      data: { deletedAt: new Date() },
+    });
+    return { success: true };
   }
 }

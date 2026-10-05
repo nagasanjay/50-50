@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getServerAccessToken } from '@/lib/server-auth';
-import type { ActivityLogEntry, BalancesResponse, Group, User } from '@/lib/types';
+import type { ActivityLogEntry, BalancesResponse, Expense, Group, GroupMember, User } from '@/lib/types';
 import { BalanceList } from '@/components/BalanceList';
 import { ActivityFeed } from '@/components/ActivityFeed';
+import { ExpenseList } from '@/components/ExpenseList';
 import { BackLink } from '@/components/BackLink';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -15,11 +16,13 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
     redirect('/login');
   }
 
-  const [group, me, balances, activity] = await Promise.all([
+  const [group, me, balances, activity, expenses, members] = await Promise.all([
     apiFetch<Group>(`/groups/${params.groupId}`, { accessToken }),
     apiFetch<User>('/users/me', { accessToken }),
     apiFetch<BalancesResponse>(`/groups/${params.groupId}/balances`, { accessToken }),
     apiFetch<ActivityLogEntry[]>(`/groups/${params.groupId}/activity`, { accessToken }),
+    apiFetch<Expense[]>(`/groups/${params.groupId}/expenses`, { accessToken }),
+    apiFetch<GroupMember[]>(`/groups/${params.groupId}/members`, { accessToken }),
   ]);
 
   return (
@@ -47,7 +50,8 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
       </div>
 
       <BalanceList data={balances} currentUserId={me.id} />
-      <ActivityFeed entries={activity} />
+      <ExpenseList groupId={params.groupId} expenses={expenses} members={members} currentUserId={me.id} />
+      <ActivityFeed groupId={params.groupId} entries={activity} />
     </div>
   );
 }

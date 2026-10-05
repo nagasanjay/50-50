@@ -198,4 +198,71 @@ describe('Group expense lifecycle (integration)', () => {
       .set('Authorization', `Bearer ${alice.accessToken}`);
     expect(listRes.body).toHaveLength(0);
   });
+
+  it('soft-deletes an expense: balances return to zero for every participant, editing is blocked, and the activity entry is marked deleted', async () => {
+    const alice = await registerUser(app, 'alice5@flow.com', 'Alice');
+    const bob = await registerUser(app, 'bob5@flow.com', 'Bob');
+    const groupRes = await request(app.getHttpServer())
+      .post('/groups')
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ name: 'Group' });
+    const groupId = groupRes.body.id as string;
+    await request(app.getHttpServer())
+      .post('/groups/join')
+      .set('Authorization', `Bearer ${bob.accessToken}`)
+      .send({ inviteCode: groupRes.body.inviteCode });
+
+    const expenseRes = await request(app.getHttpServer())
+      .post(`/groups/${groupId}/expenses`)
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({
+        description: 'Dinner',
+        amountCents: 1000,
+        splitType: 'EQUAL',
+        paidById: alice.id,
+        participants: { userIds: [alice.id, bob.id] },
+      });
+    const expenseId = expenseRes.body.id as string;
+
+    await request(app.getHttpServer())
+      .delete(`/groups/${groupId}/expenses/${expenseId}`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+
+    const balances = await request(app.getHttpServer())
+      .get(`/groups/${groupId}/balances`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(balances.body.balances.every((b: { netCents: number }) => b.netCents === 0)).toBe(true);
+
+    const updateRes = await request(app.getHttpServer())
+      .patch(`/groups/${groupId}/expenses/${expenseId}`)
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({
+        description: 'Dinner (edited)',
+        amountCents: 2000,
+        splitType: 'EQUAL',
+        paidById: alice.id,
+        participants: { userIds: [alice.id, bob.id] },
+      });
+    expect(updateRes.status).toBe(409);
+
+    // deleting again is idempotent, not an error
+    const secondDelete = await request(app.getHttpServer())
+      .delete(`/groups/${groupId}/expenses/${expenseId}`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(secondDelete.status).toBe(200);
+
+    const activity = await request(app.getHttpServer())
+      .get(`/groups/${groupId}/activity`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    const createdEntry = activity.body.find(
+      (a: { type: string; metadata: { expenseId: string } }) =>
+        a.type === 'EXPENSE_CREATED' && a.metadata.expenseId === expenseId,
+    );
+    expect(createdEntry.metadata.deleted).toBe(true);
+    const deletedEntries = activity.body.filter(
+      (a: { type: string; metadata: { expenseId: string } }) =>
+        a.type === 'EXPENSE_DELETED' && a.metadata.expenseId === expenseId,
+    );
+    expect(deletedEntries).toHaveLength(1);
+  });
 });

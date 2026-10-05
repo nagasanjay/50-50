@@ -82,4 +82,75 @@ describe('Settlements (integration)', () => {
     expect(listRes.body).toHaveLength(1);
     expect(listRes.body[0].note).toBe('lunch');
   });
+
+  it('soft-deletes a settlement: it drops out of balances and the list, but the activity entry stays and is marked deleted', async () => {
+    const alice = await registerUser(app, 'alice-settle4@example.com', 'Alice');
+    const bob = await registerUser(app, 'bob-settle4@example.com', 'Bob');
+    const groupRes = await request(app.getHttpServer())
+      .post('/groups')
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ name: 'Group' });
+    await request(app.getHttpServer())
+      .post('/groups/join')
+      .set('Authorization', `Bearer ${bob.accessToken}`)
+      .send({ inviteCode: groupRes.body.inviteCode });
+
+    const settlementRes = await request(app.getHttpServer())
+      .post(`/groups/${groupRes.body.id}/settlements`)
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ fromUserId: bob.id, toUserId: alice.id, amountCents: 100, note: 'lunch' });
+    const settlementId = settlementRes.body.id as string;
+
+    const deleteRes = await request(app.getHttpServer())
+      .delete(`/groups/${groupRes.body.id}/settlements/${settlementId}`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(deleteRes.status).toBe(200);
+
+    const listRes = await request(app.getHttpServer())
+      .get(`/groups/${groupRes.body.id}/settlements`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(listRes.body).toHaveLength(0);
+
+    const balances = await request(app.getHttpServer())
+      .get(`/groups/${groupRes.body.id}/balances`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(balances.body.balances.every((b: { netCents: number }) => b.netCents === 0)).toBe(true);
+
+    const activity = await request(app.getHttpServer())
+      .get(`/groups/${groupRes.body.id}/activity`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    const entry = activity.body.find(
+      (a: { type: string; metadata: { settlementId: string } }) =>
+        a.type === 'SETTLEMENT_CREATED' && a.metadata.settlementId === settlementId,
+    );
+    expect(entry.metadata.deleted).toBe(true);
+    expect(entry.metadata.note).toBe('lunch');
+  });
+
+  it('404s when deleting a settlement from another group', async () => {
+    const alice = await registerUser(app, 'alice-settle5@example.com', 'Alice');
+    const bob = await registerUser(app, 'bob-settle5@example.com', 'Bob');
+    const group1 = await request(app.getHttpServer())
+      .post('/groups')
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ name: 'Group1' });
+    const group2 = await request(app.getHttpServer())
+      .post('/groups')
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ name: 'Group2' });
+    await request(app.getHttpServer())
+      .post('/groups/join')
+      .set('Authorization', `Bearer ${bob.accessToken}`)
+      .send({ inviteCode: group1.body.inviteCode });
+
+    const settlementRes = await request(app.getHttpServer())
+      .post(`/groups/${group1.body.id}/settlements`)
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ fromUserId: bob.id, toUserId: alice.id, amountCents: 100 });
+
+    const res = await request(app.getHttpServer())
+      .delete(`/groups/${group2.body.id}/settlements/${settlementRes.body.id}`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(res.status).toBe(404);
+  });
 });

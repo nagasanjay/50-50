@@ -34,22 +34,28 @@ describe('BalanceList', () => {
     expect(screen.getByText('settled up')).toBeInTheDocument();
   });
 
-  it('renders suggested settlements when present', () => {
+  it('renders suggested settlements when present, resolving names from the balances list', () => {
     const data: BalancesResponse = {
-      balances: [],
+      balances: [
+        { userId: 'me', name: 'Me', netCents: -1000 },
+        { userId: 'friend', name: 'Friend', netCents: 1000 },
+      ],
       simplifiedTransfers: [{ fromUserId: 'me', toUserId: 'friend', amountCents: 1000 }],
     };
     render(<BalanceList data={data} currentUserId="me" />);
-    expect(screen.getByText('You pay friend ₹10.00')).toBeInTheDocument();
+    expect(screen.getByText('You pay Friend ₹10.00')).toBeInTheDocument();
   });
 
   it('renders both party names when neither side is the current user', () => {
     const data: BalancesResponse = {
-      balances: [],
-      simplifiedTransfers: [{ fromUserId: 'alice', toUserId: 'bob', amountCents: 500 }],
+      balances: [
+        { userId: 'alice', name: 'Alice', netCents: 500 },
+        { userId: 'bob', name: 'Bob', netCents: -500 },
+      ],
+      simplifiedTransfers: [{ fromUserId: 'bob', toUserId: 'alice', amountCents: 500 }],
     };
     render(<BalanceList data={data} currentUserId="me" />);
-    expect(screen.getByText('alice pay bob ₹5.00')).toBeInTheDocument();
+    expect(screen.getByText('Bob pay Alice ₹5.00')).toBeInTheDocument();
   });
 
   it('falls back to "Unknown" for a balance entry with no name', () => {

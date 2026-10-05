@@ -141,7 +141,7 @@ export class GroupsService {
     }
 
     const hasExpenseHistory = await this.prisma.expenseParticipant.findFirst({
-      where: { userId, expense: { groupId } },
+      where: { userId, expense: { groupId, deletedAt: null } },
     });
     if (hasExpenseHistory) {
       throw new ConflictException('Cannot remove a member who is already part of an expense');

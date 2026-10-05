@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { GroupMemberGuard } from '../groups/group-member.guard';
 import { SettlementsService } from './settlements.service';
@@ -21,5 +21,10 @@ export class SettlementsController {
   @Get()
   findAll(@Param('groupId') groupId: string) {
     return this.settlementsService.findAllForGroup(groupId);
+  }
+
+  @Delete(':settlementId')
+  remove(@Param('groupId') groupId: string, @Param('settlementId') settlementId: string) {
+    return this.settlementsService.remove(groupId, settlementId);
   }
 }

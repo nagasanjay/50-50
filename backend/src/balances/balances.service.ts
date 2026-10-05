@@ -18,22 +18,22 @@ export class BalancesService {
     const [paidGroups, owedGroups, settledOutGroups, settledInGroups] = await Promise.all([
       this.prisma.expense.groupBy({
         by: ['paidById'],
-        where: { groupId },
+        where: { groupId, deletedAt: null },
         _sum: { amountCents: true },
       }),
       this.prisma.expenseParticipant.groupBy({
         by: ['userId'],
-        where: { expense: { groupId } },
+        where: { expense: { groupId, deletedAt: null } },
         _sum: { shareCents: true },
       }),
       this.prisma.settlement.groupBy({
         by: ['fromUserId'],
-        where: { groupId },
+        where: { groupId, deletedAt: null },
         _sum: { amountCents: true },
       }),
       this.prisma.settlement.groupBy({
         by: ['toUserId'],
-        where: { groupId },
+        where: { groupId, deletedAt: null },
         _sum: { amountCents: true },
       }),
     ]);

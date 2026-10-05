@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ActivityService } from '../activity/activity.service';
 import { computeShares } from './split.util';
@@ -49,7 +49,7 @@ export class ExpensesService {
 
   async findAllForGroup(groupId: string) {
     return this.prisma.expense.findMany({
-      where: { groupId },
+      where: { groupId, deletedAt: null },
       orderBy: { incurredAt: 'desc' },
       include: { participants: true },
     });
@@ -67,7 +67,10 @@ export class ExpensesService {
   }
 
   async update(groupId: string, expenseId: string, actorId: string, dto: CreateExpenseDto) {
-    await this.findOne(groupId, expenseId);
+    const existing = await this.findOne(groupId, expenseId);
+    if (existing.deletedAt) {
+      throw new ConflictException('Cannot edit a deleted expense');
+    }
     const shares = computeShares(dto.amountCents, dto.splitType, dto.participants);
 
     return this.prisma.$transaction(async (tx) => {
@@ -106,15 +109,18 @@ export class ExpensesService {
 
   async remove(groupId: string, expenseId: string, actorId: string) {
     const expense = await this.findOne(groupId, expenseId);
+    if (expense.deletedAt) {
+      return { success: true };
+    }
 
     await this.prisma.$transaction(async (tx) => {
+      await tx.expense.update({ where: { id: expenseId }, data: { deletedAt: new Date() } });
       await this.activity.writeLog(tx, {
         groupId,
         actorId,
         type: 'EXPENSE_DELETED',
         metadata: { expenseId: expense.id, description: expense.description, amountCents: expense.amountCents },
       });
-      await tx.expense.delete({ where: { id: expenseId } });
     });
 
     return { success: true };

@@ -8,6 +8,9 @@ export interface BalanceListProps {
 }
 
 export function BalanceList({ data, currentUserId }: BalanceListProps) {
+  const nameById = new Map(data.balances.map((b) => [b.userId, b.name ?? 'Unknown']));
+  const nameFor = (userId: string) => nameById.get(userId) ?? 'Unknown';
+
   return (
     <div className="space-y-4">
       <Card>
@@ -41,8 +44,8 @@ export function BalanceList({ data, currentUserId }: BalanceListProps) {
           <CardContent className="space-y-1">
             {data.simplifiedTransfers.map((t, i) => (
               <p key={i} className="text-sm">
-                {t.fromUserId === currentUserId ? 'You' : t.fromUserId} pay{' '}
-                {t.toUserId === currentUserId ? 'you' : t.toUserId} {formatCents(t.amountCents)}
+                {t.fromUserId === currentUserId ? 'You' : nameFor(t.fromUserId)} pay{' '}
+                {t.toUserId === currentUserId ? 'you' : nameFor(t.toUserId)} {formatCents(t.amountCents)}
               </p>
             ))}
           </CardContent>
